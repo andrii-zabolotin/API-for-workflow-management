@@ -33,6 +33,7 @@ class WorkFlow(Base):
     message_nodes: Mapped[list["MessageNode"]] = relationship(back_populates="message_node_workflow")
     condition_nodes: Mapped[list["ConditionNode"]] = relationship(back_populates="condition_node_workflow")
     end_nodes: Mapped[list["EndNode"]] = relationship(back_populates="end_node_workflow")
+    edges: Mapped[list["Edge"]] = relationship(back_populates="edge_workflow")
 
     repr_cols_num = 2
     repr_cols = tuple()
@@ -48,13 +49,21 @@ class NodeInterface(Base):
     __mapper_args__ = {"polymorphic_on": discriminator}
 
 
+class EdgeType(enum.Enum):
+    DEFAULT = "default"
+    YES = "yes"
+    NO = "no"
+
+
 class Edge(Base):
     start_node_id: Mapped[int] = mapped_column(ForeignKey("nodeinterface.id"))
     end_node_id: Mapped[int] = mapped_column(ForeignKey("nodeinterface.id"))
     workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    edge_type: Mapped[EdgeType]
 
     start_node = relationship('NodeInterface', foreign_keys=[start_node_id])
     end_node = relationship('NodeInterface', foreign_keys=[end_node_id])
+    edge_workflow: Mapped[WorkFlow] = relationship(back_populates="edges")
 
     repr_cols_num = 3
     repr_cols = tuple()
