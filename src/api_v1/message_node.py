@@ -20,7 +20,7 @@ async def list_nodes(
         status: Status = None,
         session: AsyncSession = Depends(get_async_session)
 ):
-    filters = MessageNodeKwargs(workflow_id=workflow_id, out_edge_count=out_edge, status=status)
+    filters = MessageNodeKwargs(workflow_id=workflow_id, has_out_edge=out_edge, status=status)
     return await MessageNodeRepository(session=session).list(**filters.model_dump())
 
 

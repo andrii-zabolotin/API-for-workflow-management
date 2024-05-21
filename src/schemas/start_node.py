@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class StartNodeKwargs(BaseModel):
     workflow_id: Optional[int] = None
-    out_edge_count: Optional[bool] = None
+    has_out_edge: Optional[bool] = None
 
 
 class StartNodeManage(BaseModel):
@@ -15,4 +15,4 @@ class StartNodeManage(BaseModel):
 class StartNodeRead(BaseModel):
     id: int
     workflow_id: int
-    out_edge_count: bool
+    has_out_edge: bool

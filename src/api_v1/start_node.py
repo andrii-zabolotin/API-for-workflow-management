@@ -19,7 +19,7 @@ async def list_nodes(
         out_edge: bool = None,
         session: AsyncSession = Depends(get_async_session)
 ):
-    filters = StartNodeKwargs(workflow_id=workflow_id, out_edge_count=out_edge)
+    filters = StartNodeKwargs(workflow_id=workflow_id, has_out_edge=out_edge)
     return await StartNodeRepository(session=session).list(**filters.model_dump())
 
 

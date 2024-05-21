@@ -1,8 +1,6 @@
-from abc import ABC
 from typing import Type
 
 from fastapi import HTTPException
-from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete, Insert, and_
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,8 +75,9 @@ class BaseRepository:
         return stmt
 
     async def delete(self, model_object_id: int):
-        stmt = self.construct_delete_stmt(id=model_object_id)
-        result = await self._session.execute(stmt)
-        if result.rowcount == 0:
+        result = await self._session.execute(self.construct_get_stmt(id=model_object_id))
+        node = result.scalar_one_or_none()
+        if not node:
             raise HTTPException(status_code=404, detail=f"{self._model.__name__} with the specified id was not found")
+        await self._session.delete(node)
         await self._session.commit()

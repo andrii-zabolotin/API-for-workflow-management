@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import StreamingResponse
 
 from src.database import get_async_session
 from src.repositories.workflow import WorkFlowRepository
@@ -29,12 +30,12 @@ async def get_workflow(
 
 
 @router.get("/{workflow_id}/start")
-async def get_workflow(
+async def start_workflow(
         workflow_id: int,
         session: AsyncSession = Depends(get_async_session)
 ):
-    pass
-
+    buf = await WorkFlowRepository(session=session).start(workflow_id=workflow_id)
+    return StreamingResponse(buf, media_type="image/png")
 
 
 @router.post("/create")

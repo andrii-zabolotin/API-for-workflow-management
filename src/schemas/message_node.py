@@ -7,7 +7,7 @@ from src.models import Status
 
 class MessageNodeKwargs(BaseModel):
     workflow_id: Optional[int] = None
-    out_edge_count: Optional[bool] = None
+    has_out_edge: Optional[bool] = None
     status: Optional[Status] = None
 
 
@@ -27,4 +27,4 @@ class MessageNodeRead(BaseModel):
     status: str
     message: str
     workflow_id: int
-    out_edge_count: bool
+    has_out_edge: bool
