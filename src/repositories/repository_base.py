@@ -62,13 +62,18 @@ class BaseRepository:
         return stmt
 
     async def update(self, values: dict, model_object_id: int):
-        stmt = self.construct_update_stmt(values=values, id=model_object_id)
-        result = await self._session.execute(stmt)
-        model_object = result.scalar_one_or_none()
-        if not model_object:
+        result = await self._session.execute(self.construct_get_stmt(id=model_object_id))
+        obj = result.scalar_one_or_none()
+        if not obj:
             raise HTTPException(status_code=404, detail=f"{self._model.__name__} with the specified id was not found")
+        for c, v in values.items():
+            if not hasattr(self._model, c):
+                raise ValueError(f"Invalid column name {c}")
+            if v is not None:
+                setattr(obj, c, v)
+
         await self._session.commit()
-        return model_object
+        return obj
 
     def construct_delete_stmt(self, id: int):
         stmt = delete(self._model).where(self._model.id == id)
@@ -76,8 +81,8 @@ class BaseRepository:
 
     async def delete(self, model_object_id: int):
         result = await self._session.execute(self.construct_get_stmt(id=model_object_id))
-        node = result.scalar_one_or_none()
-        if not node:
+        obj = result.scalar_one_or_none()
+        if not obj:
             raise HTTPException(status_code=404, detail=f"{self._model.__name__} with the specified id was not found")
-        await self._session.delete(node)
+        await self._session.delete(obj)
         await self._session.commit()

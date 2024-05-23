@@ -29,23 +29,31 @@ async def get_workflow(
     return await WorkFlowRepository(session=session).get(model_object_id=workflow_id)
 
 
-@router.get("/{workflow_id}/start")
+@router.get("/{workflow_id}/path")
 async def start_workflow(
         workflow_id: int,
         session: AsyncSession = Depends(get_async_session)
 ):
-    buf = await WorkFlowRepository(session=session).start(workflow_id=workflow_id)
+    return await WorkFlowRepository(session=session).get_path(workflow_id=workflow_id)
+
+
+@router.get("/{workflow_id}/path/image")
+async def start_workflow(
+        workflow_id: int,
+        session: AsyncSession = Depends(get_async_session)
+):
+    buf = await WorkFlowRepository(session=session).get_path_image(workflow_id=workflow_id)
     return StreamingResponse(buf, media_type="image/png")
 
 
-@router.post("/create")
+@router.post("/create", status_code=201)
 async def create_workflow(
         session: AsyncSession = Depends(get_async_session)
 ):
     return await WorkFlowRepository(session=session).add(values=None)
 
 
-@router.delete("/delete/{workflow_id}")
+@router.delete("/delete/{workflow_id}", status_code=204)
 async def delete_workflow(
         workflow_id: int,
         session: AsyncSession = Depends(get_async_session)

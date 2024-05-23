@@ -22,7 +22,7 @@ async def list_edges(
     return await EdgeRepository(session=session).list(**filters.model_dump())
 
 
-@router.get("{edge_id}", response_model=EdgeRead)
+@router.get("/{edge_id}", response_model=EdgeRead)
 async def get_edge(
         edge_id: int,
         session: AsyncSession = Depends(get_async_session)
@@ -30,7 +30,7 @@ async def get_edge(
     return await EdgeRepository(session=session).get(model_object_id=edge_id)
 
 
-@router.post("/create")
+@router.post("/create", status_code=201)
 async def create_edge(
         edge_in: EdgeCreate,
         session: AsyncSession = Depends(get_async_session)
@@ -47,7 +47,7 @@ async def update_edge(
     return await EdgeRepository(session=session).update(model_object_id=edge_id, values=edge_in_data.model_dump())
 
 
-@router.delete("/delete/{edge_id}")
+@router.delete("/delete/{edge_id}", status_code=204)
 async def delete_edge(
         edge_id: int,
         session: AsyncSession = Depends(get_async_session)

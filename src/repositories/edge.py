@@ -1,7 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.models import Edge, NodeInterface, StartNode, MessageNode, ConditionNode, EdgeType, WorkFlow
 from src.repositories.repository_base import BaseRepository
@@ -12,6 +11,15 @@ class EdgeRepository(BaseRepository):
         super().__init__(session=session, model=Edge)
 
     async def get_edge_start_node(self, query):
+        """
+        Checks if the query returns start node.
+
+        Returns:
+            StartNode: Model instance.
+
+        Raises:
+            HTTPException: If not Start node.
+        """
         result = await self._session.execute(query)
         edge_start_node = result.scalar_one_or_none()
         if not edge_start_node:
@@ -20,6 +28,15 @@ class EdgeRepository(BaseRepository):
         return edge_start_node
 
     async def get_edge_end_node(self, query):
+        """
+        Checks if the query returns end node.
+
+        Returns:
+            EndNode: Model instance.
+
+        Raises:
+            HTTPException: If not End node.
+        """
         result = await self._session.execute(query)
         edge_end_node = result.scalar_one_or_none()
         if not edge_end_node:
@@ -28,17 +45,35 @@ class EdgeRepository(BaseRepository):
         return edge_end_node
 
     async def validate_edge_type(self, edge_type, out_node):
+        """
+        Validates edge type.
+
+        Raises:
+            HTTPException: If edge type is not default and the node is not condition node.
+        """
         if edge_type != EdgeType.DEFAULT and out_node.discriminator != "conditionnode":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail=f"Only Condition nodes can have {edge_type.value.upper()} edge type")
+                                detail=f"Only Condition nodes can have {edge_type} edge type")
 
     async def validate_out_node(self, out_node):
+        """
+        Validates out node.
+
+        Raises:
+            HTTPException: If not out-node. If the node is end node.
+        """
         if not out_node:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The node from which the edge begins with the specified ID was not found")
         elif out_node.discriminator == "endnode":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End node can't have output edges")
 
     async def validate_in_node(self, in_node):
+        """
+        Validates in node.
+
+        Raises:
+            HTTPException: If not in-node. If the node is start node.
+        """
         if not in_node:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The node where the edge ends with the specified ID was not found")
         elif in_node.discriminator == "startnode":
@@ -90,19 +125,19 @@ class EdgeRepository(BaseRepository):
             if edge_type == EdgeType.DEFAULT:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Out node (Condition node) can't have {edge_type.value.upper()} type edge"
+                    detail=f"Out node (Condition node) can't have {edge_type} type edge"
                 )
             if edge_type == EdgeType.YES and edge_start_node.yes_edge_count:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Out node (Condition node) already has {edge_type.value.upper()} edge"
+                    detail=f"Out node (Condition node) already has {edge_type} edge"
                 )
             if edge_type == EdgeType.YES:
                 edge_start_node.yes_edge_count = True
             if edge_type == EdgeType.NO and edge_start_node.no_edge_count:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Out node (Condition node) already has {edge_type.value.upper()} edge"
+                    detail=f"Out node (Condition node) already has {edge_type} edge"
                 )
             if edge_type == EdgeType.NO:
                 edge_start_node.no_edge_count = True
@@ -120,45 +155,3 @@ class EdgeRepository(BaseRepository):
         result = await self._session.execute(stmt)
         await self._session.commit()
         return result.scalar_one()
-
-    async def update_edge_counts(self, session: AsyncSession, target):
-        start_node = target.start_node
-
-        if start_node:
-            if isinstance(start_node, MessageNode):
-                await session.execute(
-                    start_node.__table__.update()
-                    .where(start_node.__table__.c.id == start_node.id)
-                    .values(has_out_edge=False)
-                )
-            elif isinstance(start_node, StartNode):
-                await session.execute(
-                    start_node.__table__.update()
-                    .where(start_node.__table__.c.id == start_node.id)
-                    .values(has_out_edge=False)
-                )
-
-            elif isinstance(start_node, ConditionNode):
-                if target.edge_type == EdgeType.YES:
-                    await session.execute(
-                        start_node.__table__.update()
-                        .where(start_node.__table__.c.id == start_node.id)
-                        .values(yes_edge_count=False)
-                    )
-                elif target.edge_type == EdgeType.NO:
-                    await session.execute(
-                        start_node.__table__.update()
-                        .where(start_node.__table__.c.id == start_node.id)
-                        .values(no_edge_count=False)
-                    )
-
-    async def delete(self, model_object_id: int):
-        result = await self._session.execute(select(self._model).options(selectinload(self._model.start_node)).where(self._model.id == model_object_id))
-        edge = result.scalar_one_or_none()
-        if not edge:
-            raise HTTPException(status_code=404, detail=f"{self._model.__name__} with the specified id was not found")
-        await self._session.delete(edge)
-
-        await self.update_edge_counts(session=self._session, target=edge)
-
-        await self._session.commit()

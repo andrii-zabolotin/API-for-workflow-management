@@ -25,6 +25,6 @@ class EdgeCreate(BaseModel):
 
 
 class EdgeUpdate(BaseModel):
-    start_node_id: int
-    end_node_id: int
-    edge_type: EdgeType
+    start_node_id: Optional[int] = None
+    end_node_id: Optional[int] = None
+    edge_type: Optional[EdgeType] = None

@@ -13,5 +13,11 @@ SessionLocal = sessionmaker(engine, class_=AsyncSession, autocommit=False, autof
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Function for providing an asynchronous session.
+
+    Yields:
+        AsyncSession: An asynchronous session instance.
+    """
     async with SessionLocal() as session:
         yield session

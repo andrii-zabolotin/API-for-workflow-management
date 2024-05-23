@@ -12,7 +12,7 @@ class MessageNodeKwargs(BaseModel):
 
 
 class MessageNodeUpdate(BaseModel):
-    status: Optional[str] = None
+    status: Optional[Status] = None
     message: Optional[str] = None
 
 
@@ -24,7 +24,7 @@ class MessageNodeCreate(BaseModel):
 
 class MessageNodeRead(BaseModel):
     id: int
-    status: str
+    status: Status
     message: str
     workflow_id: int
     has_out_edge: bool

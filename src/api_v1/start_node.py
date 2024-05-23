@@ -31,7 +31,7 @@ async def get_node(
     return await StartNodeRepository(session=session).get(model_object_id=node_id)
 
 
-@router.post("/create")
+@router.post("/create", status_code=201)
 async def create_node(
         node_in: StartNodeManage,
         session: AsyncSession = Depends(get_async_session)
@@ -39,7 +39,7 @@ async def create_node(
     return await StartNodeRepository(session=session).add(values=node_in.model_dump())
 
 
-@router.delete("/delete/{node_id}")
+@router.delete("/delete/{node_id}", status_code=204)
 async def delete_node(
         node_id: int,
         session: AsyncSession = Depends(get_async_session)
