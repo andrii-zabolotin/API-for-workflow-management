@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  test_app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - .pytest_cache:/app/.pytest_cache
+    command: >
+      sh -c "while ! nc -z test_db 5432; do sleep 1; done; pytest -v -s --disable-warnings tests/"
+    environment:
+      - TEST_DB_HOST=test_db
+      - TEST_DB_NAME=test_devdb
+      - TEST_DB_USER=test_devuser
+      - TEST_DB_PASS=changeme
+      - DB_URL=postgresql+asyncpg://test_devuser:changeme@test_db:5432/test_devdb?async_fallback=True
+    depends_on:
+      - test_db
+  test_db:
+    image: postgres:13-alpine
+    volumes:
+      - dev-test-db-data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_DB=test_devdb
+      - POSTGRES_USER=test_devuser
+      - POSTGRES_PASSWORD=changeme
+volumes:
+  dev-test-db-data:
