@@ -29,14 +29,21 @@ and implementation of an algorithm for determining the path from the start to th
     ```bash
     docker-compose build
     ```
-4. Run
+## Run
+
+1.  Run all services
     ```bash
     docker-compose up
     ```
-5. Open in browser 
+2. Open in browser 
     ```bash
     http://127.0.0.1:8000/docs#
     ```
+   
+## To run Tests
+```bash
+docker-compose -f docker-compose.test.yml up
+```
 
 
 
